@@ -16,12 +16,13 @@ namespace numerical_ode
 {
     public partial class Form1 : Form
     {
-        int ind_of_problem, num_of_nodes, num_of_subnodes, num_of_subsubnodes;
-        PointPairList ans_nodes = new PointPairList();
-        PointPairList ans_subnodes = new PointPairList();
-        PointPairList ans_subsubnodes = new PointPairList();
+        int ind_of_problem, num_of_nodes;
+        double lambda, sigma;
+        PointPairList ans_nodes1 = new PointPairList();
+        PointPairList ans_nodes2 = new PointPairList();
+        PointPairList ans_nodes3 = new PointPairList();
 
-        double eps, step, substep, subsubstep, err;
+        double eps, step, err;
         const double pi = Math.PI;
         GraphPane pane;
         public Form1()
@@ -62,30 +63,53 @@ namespace numerical_ode
         }
         private void init_ans_nodes()
         {
-            ans_nodes.Clear();
-            ans_subnodes.Clear();
-            ans_subsubnodes.Clear();
-
-            step = 1.0 / (num_of_nodes - 1.0);
-            substep = step / (num_of_subnodes + 1.0);
-            subsubstep = substep / (num_of_subsubnodes + 1.0);
-
-            double curT = 0, curU = 0;
-            ans_nodes.Add(curT, curU);
+            ans_nodes1.Clear();
+            ans_nodes2.Clear();
+            ans_nodes3.Clear();
             
-            for (int i = 1; i < num_of_nodes; i++)
-            {
-                for (int j = 0; j < num_of_subnodes+1; j++)
+            { 
+                step = 1.0 / (num_of_nodes - 1.0);
+
+                double curT = 0, curU = 0;
+                ans_nodes1.Add(curT, curU);
+
+                for (int i = 1; i < num_of_nodes; i++)
                 {
-                    for (int k = 0; k < num_of_subsubnodes + 1; k++)
-                    {
-                        curT += subsubstep;
-                        curU += subsubstep * f(curT, curU);
-                        if(k!= num_of_subsubnodes) ans_subsubnodes.Add(curT, curU);
-                    }
-                    if (j != num_of_subnodes) ans_subnodes.Add(curT, curU);
+                    curU += step * f(curT, curU);
+                    curT += step;
+                    ans_nodes1.Add(curT, curU);
                 }
-                ans_nodes.Add(curT, curU);
+            }
+
+            {
+                step = 1.0 / (num_of_nodes - 1.0);
+
+                double curT = 0, curU = 0;
+                ans_nodes2.Add(curT, curU);
+
+                for (int i = 1; i < num_of_nodes; i++)
+                {
+                    double yh = curU + step*lambda*f(curT, curU);
+                    curU += step * ((1.0-1.0/(2.0*lambda))*f(curT, curU) + (1.0 / (2.0 * lambda))*f(curT+step*lambda, yh));
+                    curT += step;
+                    ans_nodes2.Add(curT, curU);
+                }
+            }
+
+            {
+                step = 1.0 / (num_of_nodes - 1.0);
+
+                double curT = 0, curU = 0;
+                ans_nodes3.Add(curT, curU);
+
+                for (int i = 1; i < num_of_nodes; i++)
+                {
+                    double yh1 = curU + 2.0 / 3.0 * step * lambda * f(curT, curU);
+                    double yh2 = curU + 2.0 / 3.0 * step * ( (1.0 - 3.0 / (8.0 * sigma)) * f(curT, curU) + 3.0 / (8.0 * sigma) * f(curT+ 2.0 / 3.0 * step, yh1));
+                    curU += step * (0.25*f(curT, curU) + (0.75-sigma)* f(curT + 2.0 / 3.0 * step, yh1) + sigma* f(curT + 2.0 / 3.0 * step, yh2));
+                    curT += step;
+                    ans_nodes3.Add(curT, curU);
+                }
             }
         }
 
@@ -96,11 +120,11 @@ namespace numerical_ode
 
             for(int i = 0; i < num_of_nodes; i++)
             {
-                double dev = Math.Abs(ans_nodes[i].Y - exact_val(ans_nodes[i].X));
+                double dev = Math.Abs(ans_nodes1[i].Y - exact_val(ans_nodes1[i].X));
                 if (dev > max_dev)
                     max_dev = dev;
-                if (Math.Abs(ans_nodes[i].Y) > max_val)
-                    max_val = Math.Abs(ans_nodes[i].Y);
+                if (Math.Abs(ans_nodes1[i].Y) > max_val)
+                    max_val = Math.Abs(ans_nodes1[i].Y);
             }
             
             err = 100.0 * max_dev / max_val;
@@ -115,7 +139,7 @@ namespace numerical_ode
                 list.Add(x, exact_val(x));
                 x += stp;
             }
-            LineItem myCurve = pane.AddCurve("Аналитическое решение", list, Color.Green, SymbolType.None);
+            LineItem myCurve = pane.AddCurve("Аналитическое решение", list, Color.Blue, SymbolType.None);
             myCurve.Line.Width = 3.0F;
         }
 
@@ -123,25 +147,22 @@ namespace numerical_ode
         {
             if (!Hide1.Checked)
             {
-                LineItem myCurve = pane.AddCurve("Численное решение", ans_nodes, Color.Blue, SymbolType.Circle);
-                myCurve.Line.IsVisible = false;
-                myCurve.Symbol.Fill = new Fill(Color.Blue);
+                LineItem myCurve = pane.AddCurve("Односадийный метод", ans_nodes1, Color.Green, SymbolType.Circle);
+                myCurve.Symbol.Fill = new Fill(Color.Green);
                 myCurve.Symbol.Size = 5.0F;
                 myCurve.Line.Width = 3.0F;
             }
             if (!Hide2.Checked)
             {
-                LineItem myCurve1 = pane.AddCurve("Всомогательные узлы 1", ans_subnodes, Color.LightBlue, SymbolType.Circle);
-                myCurve1.Line.IsVisible = false;
-                myCurve1.Symbol.Fill = new Fill(Color.LightBlue);
+                LineItem myCurve1 = pane.AddCurve("Двустадийный метод", ans_nodes2, Color.Yellow, SymbolType.Circle);
+                myCurve1.Symbol.Fill = new Fill(Color.Yellow);
                 myCurve1.Symbol.Size = 4.5F;
                 myCurve1.Line.Width = 3.0F;
             }
             if (!Hide3.Checked)
             {
-                LineItem myCurve2 = pane.AddCurve("Всомогательные узлы 2", ans_subsubnodes, Color.Gray, SymbolType.Circle);
-                myCurve2.Line.IsVisible = false;
-                myCurve2.Symbol.Fill = new Fill(Color.Gray);
+                LineItem myCurve2 = pane.AddCurve("Трехстадийный метод", ans_nodes3, Color.Red, SymbolType.Circle);
+                myCurve2.Symbol.Fill = new Fill(Color.Red);
                 myCurve2.Symbol.Size = 4.5F;
                 myCurve2.Line.Width = 3.0F;
             }
@@ -162,8 +183,8 @@ namespace numerical_ode
         {
             ind_of_problem = problem.SelectedIndex;
             num_of_nodes = Convert.ToInt32(number_of_nodes.Text);
-            num_of_subnodes = Convert.ToInt32(number_of_subnodes.Text);
-            num_of_subsubnodes = Convert.ToInt32(number_of_subsubnodes.Text);
+            lambda = Convert.ToDouble(number_of_subnodes.Text);
+            sigma = Convert.ToDouble(number_of_subsubnodes.Text);
             eps = Convert.ToDouble(Epsilon.Text);
 
             init_ans_nodes();

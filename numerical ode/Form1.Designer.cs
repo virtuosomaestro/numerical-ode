@@ -65,7 +65,7 @@
             // zedGraphControl
             // 
             this.zedGraphControl.Location = new System.Drawing.Point(372, 12);
-            this.zedGraphControl.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.zedGraphControl.Margin = new System.Windows.Forms.Padding(4);
             this.zedGraphControl.Name = "zedGraphControl";
             this.zedGraphControl.ScrollGrace = 0D;
             this.zedGraphControl.ScrollMaxX = 0D;
@@ -281,7 +281,7 @@
             // 
             this.textBoxU0.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F);
             this.textBoxU0.Location = new System.Drawing.Point(1062, 633);
-            this.textBoxU0.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxU0.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxU0.Name = "textBoxU0";
             this.textBoxU0.Size = new System.Drawing.Size(103, 38);
             this.textBoxU0.TabIndex = 23;
@@ -289,8 +289,8 @@
             // textBoxA
             // 
             this.textBoxA.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F);
-            this.textBoxA.Location = new System.Drawing.Point(1273, 587);
-            this.textBoxA.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxA.Location = new System.Drawing.Point(1062, 589);
+            this.textBoxA.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxA.Name = "textBoxA";
             this.textBoxA.Size = new System.Drawing.Size(98, 38);
             this.textBoxA.TabIndex = 24;
@@ -298,8 +298,8 @@
             // textBoxB
             // 
             this.textBoxB.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F);
-            this.textBoxB.Location = new System.Drawing.Point(1062, 584);
-            this.textBoxB.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxB.Location = new System.Drawing.Point(1268, 586);
+            this.textBoxB.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxB.Name = "textBoxB";
             this.textBoxB.Size = new System.Drawing.Size(103, 38);
             this.textBoxB.TabIndex = 25;
@@ -308,7 +308,7 @@
             // 
             this.textBoxV0.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F);
             this.textBoxV0.Location = new System.Drawing.Point(1273, 629);
-            this.textBoxV0.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBoxV0.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxV0.Name = "textBoxV0";
             this.textBoxV0.Size = new System.Drawing.Size(98, 38);
             this.textBoxV0.TabIndex = 26;

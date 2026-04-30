@@ -53,10 +53,10 @@ namespace numerical_ode
             drawU.Visible = false;
             drawV.Visible = false;
 
-            textBoxA.Text = "0";
-            textBoxB.Text = "0";
+            textBoxA.Text = "2";
+            textBoxB.Text = "-1";
             textBoxU0.Text = "0";
-            textBoxV0.Text = "0";
+            textBoxV0.Text = "1";
             number_of_subnodes.Text = "0,5";
             number_of_subsubnodes.Text = "0,5";
             Epsilon.Text = "0,5";
@@ -78,7 +78,7 @@ namespace numerical_ode
                     beg = 1;
                     return (u + 1.0) * (u - 2.0) / eps;
                 default:
-                    return 2.0 * Math.Sqrt(1.0 - u * u) / (eps * (2.0 - t) * (2.0 - t));
+                    return t*t;
             }
 
         }
@@ -87,13 +87,27 @@ namespace numerical_ode
             switch (ind_of_problem)
             {
                 case 0:
-                    return Math.Sin( t / (eps*(2.0-t)));
+                    return Math.Sin(t / (eps * (2.0 - t)));
                 case 1:
-                    return 0.5 / (t - eps + (5.0+eps)*Math.Exp(-t/eps));
+                    return 0.5 / (t - eps + (5.0 + eps) * Math.Exp(-t / eps));
                 case 2:
-                    return (-1 + 4*Math.Exp(-3.0*t/eps)) / (1 + 2 * Math.Exp(-3.0 * t / eps));
+                    return (-1 + 4 * Math.Exp(-3.0 * t / eps)) / (1 + 2 * Math.Exp(-3.0 * t / eps));
                 default:
                     return Math.Sin(t / (eps * (2.0 - t)));
+            }
+        }
+        private double get_beg()
+        {
+            switch (ind_of_problem)
+            {
+                case 0:
+                    return 0.0;
+                case 1:
+                    return 0.1;
+                case 2:
+                    return 1.0;
+                default:
+                    return 0.0;
             }
 
         }
@@ -104,7 +118,7 @@ namespace numerical_ode
             { 
                 step = 1.0 / (num_of_nodes - 1.0);
 
-                double curT = 0, curU = beg;
+                double curT = 0, curU = get_beg();
                 ans_nodes1.Add(curT, curU);
 
                 for (int i = 1; i < num_of_nodes; i++)
@@ -118,7 +132,7 @@ namespace numerical_ode
             {
                 step = 1.0 / (num_of_nodes - 1.0);
 
-                double curT = 0, curU = beg;
+                double curT = 0, curU = get_beg();
                 ans_nodes2.Add(curT, curU);
 
                 for (int i = 1; i < num_of_nodes; i++)
@@ -133,7 +147,7 @@ namespace numerical_ode
             {
                 step = 1.0 / (num_of_nodes - 1.0);
 
-                double curT = 0, curU = beg;
+                double curT = 0, curU = get_beg();
                 ans_nodes3.Add(curT, curU);
 
                 for (int i = 1; i < num_of_nodes; i++)
@@ -256,7 +270,7 @@ namespace numerical_ode
             textBoxA.Visible = false;
             textBoxB.Visible = false;
             textBoxU0.Visible = false;
-            textBoxU0.Visible = false;
+            textBoxV0.Visible = false;
             labelA.Visible = false;
             labelB.Visible = false;
             labelU0.Visible = false;
@@ -266,53 +280,215 @@ namespace numerical_ode
         }
         private void solve_problen_17()
         {
+            PointPairList v_nodes1 = new PointPairList();
+            PointPairList v_nodes2 = new PointPairList();
+            PointPairList v_nodes3 = new PointPairList();
             {
                 step = 1.0 / (num_of_nodes - 1);
                 double curT = 0, curU = u0, curV = v0;
                 ans_nodes1.Add(curT, curU);
+                v_nodes1.Add(curT, curV);
                 for (int i = 1; i < num_of_nodes; i++)
                 {
                     double prevU = curU, prevV = curV;
                     curU += step * prevV;
-                    curV += step * (b*prevU+a*prevV);
+                    curV += step * (b * prevU + a * prevV);
                     curT += step;
                     ans_nodes1.Add(curT, curU);
+                    v_nodes1.Add(curT, curV);
                 }
             }
             {
                 step = 1.0 / (num_of_nodes - 1);
                 double curT = 0, curU = u0, curV = v0;
                 ans_nodes2.Add(curT, curU);
-
+                v_nodes2.Add(curT, curV);
                 for (int i = 1; i < num_of_nodes; i++)
                 {
                     double prevU = curU, prevV = curV;
-                    double yh = curU + step * lambda * prevV;
-                    curU += step * ((1.0 - 1.0 / (2.0 * lambda)) * curV + (1.0 / (2.0 * lambda)) * f(curT + step * lambda, yh));
+                    double yhu = prevU + step * lambda * prevV;
+                    double yhv = prevV + step * lambda * (b * prevU + a * prevV);
+                    curU += step * ((1.0 - 1.0 / (2.0 * lambda)) * prevV + (1.0 / (2.0 * lambda)) * yhv);
+                    curV += step * ((1.0 - 1.0 / (2.0 * lambda)) * (b * prevU + a * prevV) + (1.0 / (2.0 * lambda)) * (b * yhu + a * yhv));
                     curT += step;
                     ans_nodes2.Add(curT, curU);
+                    v_nodes2.Add(curT, curV);
                 }
             }
-
+            {
+                step = 1.0 / (num_of_nodes - 1);
+                double curT = 0, curU = u0, curV = v0;
+                ans_nodes3.Add(curT, curU);
+                v_nodes3.Add(curT, curV);
+                for (int i = 1; i < num_of_nodes; i++)
+                {
+                    double prevU = curU, prevV = curV;
+                    double f1_u = prevV;
+                    double f1_v = b * prevU + a * prevV;
+                    double y1_u = prevU + (2.0 / 3.0) * step * f1_u;
+                    double y1_v = prevV + (2.0 / 3.0) * step * f1_v;
+                    double f2_u = y1_v;
+                    double f2_v = b * y1_u + a * y1_v;
+                    double coeff_a = 1.0 - 3.0 / (8.0 * sigma);
+                    double coeff_b = 3.0 / (8.0 * sigma);
+                    double y2_u = prevU + (2.0 / 3.0) * step * (coeff_a * f1_u + coeff_b * f2_u);
+                    double y2_v = prevV + (2.0 / 3.0) * step * (coeff_a * f1_v + coeff_b * f2_v);
+                    double f3_u = y2_v;
+                    double f3_v = b * y2_u + a * y2_v;
+                    double coeff1 = 0.25;
+                    double coeff2 = 0.75 - sigma;
+                    double coeff3 = sigma;
+                    curU += step * (coeff1 * f1_u + coeff2 * f2_u + coeff3 * f3_u);
+                    curV += step * (coeff1 * f1_v + coeff2 * f2_v + coeff3 * f3_v);
+                    curT += step;
+                    ans_nodes3.Add(curT, curU);
+                    v_nodes3.Add(curT, curV);
+                }
+            }
             double dis = a * a / 4.0 + b;
+            double sqrtDis = Math.Sqrt(Math.Abs(dis));
+            Func<double, double> exact_u;
+            Func<double, double> exact_v;
+            double errV1 = 0, errV2 = 0, errV3 = 0;
+
             if (dis == 0)
             {
                 double lam = a / 2.0;
-                Func<double, double> u = (t) => Math.Exp(t * lam) * (u0 + (v0 - u0 * lam) * t);
-                Func<double, double> v = (t) => Math.Exp(t * lam) * (v0 + (u0 - v0 * lam) * t);
+                exact_u = (t) => Math.Exp(t * lam) * (u0 + (v0 - u0 * lam) * t);
+                exact_v = (t) => Math.Exp(t * lam) * (v0 + (v0 - u0 * lam) * t);
 
             }
-            else if(dis > 0)
+            else if (dis > 0)
             {
-                double lam1 = a / 2.0 - dis, lam2 = a / 2.0 + dis;
+                double lam1 = a / 2.0 + sqrtDis;  
+                double lam2 = a / 2.0 - sqrtDis;  
 
+                double C1 = (v0 - lam2 * u0) / (lam1 - lam2);
+                double C2 = (lam1 * u0 - v0) / (lam1 - lam2);
+
+                exact_u = (t) => C1 * Math.Exp(lam1 * t) + C2 * Math.Exp(lam2 * t);
+                exact_v = (t) => C1 * lam1 * Math.Exp(lam1 * t) + C2 * lam2 * Math.Exp(lam2 * t);
             }
             else
             {
-                double re, im;
+                double re = a / 2.0;
+                double im = sqrtDis;
+
+                double C1 = u0;
+                double C2 = (v0 - re * u0) / im;
+
+                exact_u = (t) => Math.Exp(re * t) * (C1 * Math.Cos(im * t) + C2 * Math.Sin(im * t));
+                exact_v = (t) => Math.Exp(re * t) * (
+                    (C1 * re + C2 * im) * Math.Cos(im * t) +
+                    (C2 * re - C1 * im) * Math.Sin(im * t));
 
             }
+
+            CalcErrorForSystem(ans_nodes1, exact_u, out err1);
+            CalcErrorForSystem(ans_nodes2, exact_u, out err2);
+            CalcErrorForSystem(ans_nodes3, exact_u, out err3);
+
+            CalcErrorForSystem(v_nodes1, exact_v, out errV1);
+            CalcErrorForSystem(v_nodes2, exact_v, out errV2);
+            CalcErrorForSystem(v_nodes3, exact_v, out errV3);
+
+            pane.CurveList.Clear();
+
+            if (drawU.Checked)
+            {
+                PointPairList list = new PointPairList();
+                double N = 10000;
+                double stp = 1.0 / (N - 1), x = 0;
+                for (int i = 0; i < N; i++)
+                {
+                    list.Add(x, exact_u(x));
+                    x += stp;
+                }
+                LineItem myCurve = pane.AddCurve("", list, Color.Blue, SymbolType.None);
+                myCurve.Line.Width = 3.0F;
+
+                if (!Hide1.Checked)
+                {
+                    draw17(ans_nodes1, Color.Green);
+                }
+                if (!Hide2.Checked)
+                {
+                    draw17(ans_nodes2, Color.Yellow);
+                }
+                if (!Hide3.Checked)
+                {
+                    draw17(ans_nodes3, Color.Red);
+                }
+                zedGraphControl.AxisChange();
+                zedGraphControl.Invalidate();
+            }
+            if (drawV.Checked)
+            {
+                PointPairList list = new PointPairList();
+                double N = 10000;
+                double stp = 1.0 / (N - 1), x = 0;
+                for (int i = 0; i < N; i++)
+                {
+                    list.Add(x, exact_v(x));
+                    x += stp;
+                }
+                LineItem myCurve = pane.AddCurve("", list, Color.DarkBlue, SymbolType.None);
+                myCurve.Line.Width = 3.0F;
+                if (!Hide1.Checked)
+                {
+                    draw17(v_nodes1, Color.DarkGreen);
+                }
+                if (!Hide2.Checked)
+                {
+                    draw17(v_nodes2, Color.Orange);
+                }
+                if (!Hide3.Checked)
+                {
+                    draw17(v_nodes3, Color.DarkRed);
+                }
+                zedGraphControl.AxisChange();
+                zedGraphControl.Invalidate();
+            }
+            error1.Text = "Погрешность u (Эйлер): " + err1.ToString("F5") + "% " + "Погрешность v (Эйлер): " + errV1.ToString("F5") + "%"; 
+            error2.Text = "Погрешность u (2-стад.): " + err2.ToString("F5") + "% " + "Погрешность v (2-стад.): " + errV2.ToString("F5") + "%"; ;
+            error3.Text = "Погрешность u (3-стад.): " + err3.ToString("F5") + "% " + "Погрешность v (3-стад.): " + errV3.ToString("F5") + "%";
         }
+
+        private void CalcErrorForSystem(PointPairList nodes, Func<double, double> exact, out double error)
+        {
+            double max_dev = 0;
+            double max_val = 0;
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                double t = nodes[i].X;
+                double approx = nodes[i].Y;
+                double exact_val = exact(t);
+                double dev = Math.Abs(approx - exact_val);
+
+                if (dev > max_dev)
+                    max_dev = dev;
+                if (Math.Abs(exact_val) > max_val)
+                    max_val = Math.Abs(exact_val);
+            }
+
+            error = (max_val > 1e-10) ? 100.0 * max_dev / max_val : 0;
+        }
+
+        private void draw17(PointPairList nodes, Color col)
+        {
+ 
+
+            LineItem myCurve = pane.AddCurve("", nodes, col, SymbolType.Circle);
+            myCurve.Symbol.Fill = new Fill(col);
+            myCurve.Symbol.Size = 5.0F;
+            myCurve.Line.Width = 3.0F;
+        
+            zedGraphControl.AxisChange();
+            zedGraphControl.Invalidate();
+        }
+
+
         private void button1_Click(object sender, EventArgs e)
         {
             ans_nodes1.Clear();
@@ -335,7 +511,7 @@ namespace numerical_ode
                 textBoxA.Visible = true;
                 textBoxB.Visible = true;
                 textBoxU0.Visible = true;
-                textBoxU0.Visible = true;
+                textBoxV0.Visible = true;
                 drawU.Visible = true;
                 drawV.Visible = true;
                 labelA.Visible = true;
@@ -344,14 +520,14 @@ namespace numerical_ode
                 labelV0.Visible = true;
 
                 solve_problen_17();
-                return;
             }
-            
-
-            init_ans_nodes();
-            calc();
-            draw();
-            display_values();
+            else
+            {
+               init_ans_nodes();
+                calc();
+                draw();
+                display_values();
+            }
             //calc_table();
         }
         private void calc_table()
